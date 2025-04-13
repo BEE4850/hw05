@@ -151,7 +151,7 @@ The pollution variables have been standardized to represent deviations from the 
 ```{julia}
 #| label: chicago-deaths
 
-chicago_dat = CSV.read("data/chicago.csv", DataFrame; delim=',', header=true, types=Union{Missing, Float64}) # <1>
+chicago_dat = CSV.read("data/chicago.csv", DataFrame; delim=',', header=true, missingstring="NA") # <1>
 day_zero = Date("1993-12-31")
 chicago_dat.Date = day_zero .+ Day.(chicago_dat.time .+ 0.5) # <2>
 
