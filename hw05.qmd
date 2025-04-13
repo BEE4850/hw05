@@ -1,0 +1,168 @@
+---
+title: "Homework 5: Model Selection and Extreme Values"
+subtitle: "BEE 4850/5850, Spring 2025"
+format:
+    html:        
+        warning: true
+        error: true
+        fig-format: svg
+    pdf:
+        warning: true
+        error: true
+        keep-tex: true
+        fig-format: svg    
+        include-in-header: 
+            text: |
+                \usepackage{fvextra}
+                \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+        include-before-body:
+            text: |
+                \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
+                showspaces = false,
+                showtabs = false,
+                breaksymbolleft={},
+                breaklines
+                % Note: setting commandchars=\\\{\} here will cause an error 
+                }
+    ipynb:
+        warning: true
+        error: true
+engine: julia
+format-links: [pdf]
+freeze: false
+---
+
+::: {.content-visible when-format="ipynb"}
+**Name**:
+
+**ID**:
+:::
+
+::: {.callout-important icon=false}
+### Due Date
+
+Friday, 5/2/25, 9:00pm
+:::
+
+::: {.content-visible unless-format="ipynb"}
+:::{.callout-tip}
+
+To do this assignment in Julia, you can find a Jupyter notebook with an appropriate environment in [the homework's Github repository]({{< var github_org.repo >}}/hw05). Otherwise, you will be responsible for setting up an appropriate package environment in the language of your choosing. Make sure to include your name and NetID on your solution.
+:::
+:::
+
+## Overview
+
+::: {.cell .markdown}
+
+### Instructions
+
+The goal of this homework assignment is to practice simulation-based uncertainty quantification, focusing on the bootstrap.
+
+* Problem 1 asks you to use the non-parametric bootstrap to estimate uncertainty in a Poisson regression model.
+* Problem 2 asks you to use the bootstrap (through resampling residuals) to estimate uncertainty in a semi-empirical sea-level rise model.
+* Problem 3 (only required for students in BEE 5850) asks you to use a moving block bootstrap to estimate the sampling distribution of the median of extreme water level data.
+
+
+### Load Environment
+
+The following code loads the environment and makes sure all needed packages are installed. This should be at the start of most Julia scripts.
+
+:::
+
+```{julia}
+#| output: false
+
+import Pkg
+Pkg.activate(@__DIR__)
+Pkg.instantiate()
+```
+
+The following packages are included in the environment (to help you find other similar packages in other languages). The code below loads these packages for use in the subsequent notebook (the desired functionality for each package is commented next to the package).
+
+
+```{julia}
+#| output: false
+
+using Random # random number generation and seed-setting
+using DataFrames # tabular data structure
+using DataFramesMeta # API which can simplify chains of DataFrames transformations
+using CSV # reads/writes .csv files
+using Distributions # interface to work with probability distributions
+using Plots # plotting library
+using StatsBase # statistical quantities like mean, median, etc
+using StatsPlots # some additional statistical plotting tools
+using Dates
+```
+
+## Problems 
+
+### Scoring
+
+* Problem 1 is worth 10 points;
+* Problem 2 is worth 10 points;
+* Problem 3 is worth 5 points;
+
+### Problem 1
+
+Let's look at how (modeled) annual maximum temperatures have (or have not) increased in Ithaca from 1850--2014. Model output from NOAA's GFDL-ESM4 climate model (one of the models used in the latest Climate Model Intercomparison Project, [CMIP6](https://colab.research.google.com/corgiredirector?site=https%3A%2F%2Fcds.climate.copernicus.eu%2Fcdsapp%23%21%2Fdataset%2Fprojections-cmip6%3Ftab%3Doverview)) is available in `data/gfdl-esm4-tempmax-ithaca.csv`. While this model output has not been bias-corrected, we won't worry about that for the purposes of this assignment. The temperature data is in degrees Celsius, and the dates are provided as calendar dates.
+
+```{julia}
+#| label: ithaca-temp
+
+ithaca_dat = CSV.read("data/gfdl-esm4-tempmax-ithaca.csv", DataFrame)
+plot(ithaca_dat.Day, ithaca_dat.TempMax, lw=2, xlabel="Date", ylabel="Daily Maximum Temperature (°C)", legend=false)
+```
+
+**In this problem**: 
+
+* Load the (daily maximum) temperature data from `data/gfdl-esm4-tempmax-ithaca.csv`. Find the modeled annual maximum temperatures and plot them.
+* Fit a stationary GEV model to the annual maximum series and report your parameter estimates. Plot the fitted distribution along with the data. What type of GEV distribution did you end up with? What is the 100-year return level?
+* Now fit a nonstationary GEV with respect to time (only the location parameter should be non-stationary), $y \sim \text{GEV}(\mu_0 + \mu_1 t, \sigma, \xi)$ (for scaling purposes, begin with $t=0$ corresponding to 1850).
+* What are the AIC values for each model? What can you conclude about the relative evidence for non-stationarity?
+
+
+### Problem 2
+
+Now let's analyze how often of the Ithaca temperature data.
+
+**In this problem**: 
+
+* Suppose that we were interested in looking at temperature exceedances over 28°C. Decluster these occurrences and plot the number of exceedances by year. Have they increased over time? 
+* Fit a stationary Poisson-GPD model for the exceedances. What does the GPD distribution look like? 
+* From your model, estimate the 100-year return level. How does it differ from the 100-year return period from the stationary model in Problem 1? Why do you think it agrees or disagrees?
+
+
+### Problem 3
+
+**This problem is only required for students in BEE 5850**.
+
+Let's examine the influence of air pollution and temperature on mortality in Chicago, IL.  The `data/chicago.csv` dataset (originally from the [`gamair` `R` package](https://cran.r-project.org/web/packages/gamair/index.html))contains data on the relationship between environmental conditions (temperature and air quality) and deaths in Chicago from 1987--2000. The variables are:
+
+* the total number of (non-accidental)
+deaths each day (`death`); 
+* the median density over the city of large pollutant particles (PM10; `pm10median`); 
+* the median density of smaller pollutant particles (PM2.5; `pm25median`); 
+* the median concentration of ozone (O$_3$) in the air (`o3median`); the median concentration of sulfur dioxide (SO$_2$) in the air (`so2median`); 
+* the time in days (`time`); and the daily mean temperature (`tmpd`). 
+
+The pollution variables have been standardized to represent deviations from the overall median and the temperature is in Fahrenheit. The days are given as a number of days relative to December 31, 1993. Note that some values are missing; these can be treated as missing at random and dropped in your regressions.
+
+```{julia}
+#| label: chicago-deaths
+
+chicago_dat = CSV.read("data/chicago.csv", DataFrame; delim=',', header=true, types=Union{missing, Float64}) # <1>
+day_zero = Date("1993-12-31")
+chicago_dat.Date = day_zero .+ Day.(chicago_dat.time .+ 0.5) # <2>
+
+plot(chicago_dat.Date, chicago_dat.death, lw=2, xlabel="Date", ylabel="Non-Accidental Deaths)", legend=false)
+```
+1. The datafile imports columns with `NA` values by default as `String` types, but we want them to be numerical, so we need to explicitly ask `CSV.read` to read in columns as `Float`.
+2. To get the correct calendar date, we need to add 0.5 to the `time` column to make the offset into integers.
+
+**In this problem**:
+
+* Load and plot the deaths data. Linearly regress the number of deaths against time and report the coefficients for the fitted model. Add the regression line to your plot. What does this regression tell you?
+* Now linearly regress the deaths data against temperature. Once again, report the coefficients, and add the regression line to your plot. What does this regression tell you about the influence of temperature?
+* Expand your previous model by regressing deaths against temperature and PM2.5 density. Report the coefficients and add this regression line to your plot. 
+* Compute the AICs for the three fitted model and compare them. What do they tell you about the relative evidence for the influence of temperature and PM2.5 density on deaths? How do your conclusions based on AIC compare to those you might draw from your regression coefficients and plots?
