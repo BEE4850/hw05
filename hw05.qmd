@@ -57,12 +57,11 @@ To do this assignment in Julia, you can find a Jupyter notebook with an appropri
 
 ### Instructions
 
-The goal of this homework assignment is to practice simulation-based uncertainty quantification, focusing on the bootstrap.
+The goal of this homework assignment is to practicing approaches to extreme value analysis and using information criteria to assess evidence for models.
 
-* Problem 1 asks you to use the non-parametric bootstrap to estimate uncertainty in a Poisson regression model.
-* Problem 2 asks you to use the bootstrap (through resampling residuals) to estimate uncertainty in a semi-empirical sea-level rise model.
-* Problem 3 (only required for students in BEE 5850) asks you to use a moving block bootstrap to estimate the sampling distribution of the median of extreme water level data.
-
+* Problem 1 asks you to compare stationary and non-stationary block maxima models for daily maximum temperature data.
+* Problem 2 asks you to use peaks-over-thresholds modeling on the same dataset from Problem 1.
+* Problem 3 (only required for students in BEE 5850) asks you to compare several linear regression models for environmental influences on non-accidental death data.
 
 ### Load Environment
 
