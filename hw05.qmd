@@ -1,5 +1,5 @@
 ---
-title: "Homework 5: Model Selection and Extreme Values"
+title: "Homework 5: Hypothesis Testing and Monte Carlo"
 subtitle: "BEE 4850/5850, Spring 2025"
 format:
     html:        
@@ -59,7 +59,7 @@ To do this assignment in Julia, you can find a Jupyter notebook with an appropri
 
 The goal of this homework assignment is to practicing approaches to extreme value analysis and using information criteria to assess evidence for models.
 
-* Problem 1 asks you to compare stationary and non-stationary block maxima models for daily maximum temperature data.
+* Problem 1 asks you to conduct a null hypothesis test using model simulations.
 * Problem 2 asks you to use peaks-over-thresholds modeling on the same dataset from Problem 1.
 * Problem 3 (only required for students in BEE 5850) asks you to compare several linear regression models for environmental influences on non-accidental death data.
 
@@ -98,70 +98,98 @@ using Dates
 
 ### Scoring
 
-* Problem 1 is worth 10 points;
-* Problem 2 is worth 10 points;
-* Problem 3 is worth 5 points;
+* Problem 1 is worth 3 points;
+* Problem 2 is worth 5 points;
+* Problem 3 is worth 7 points;
+* Problem 4 is worth 10 points.
 
-### Problem 1
+### Problem 1 (3 points)
 
-Let's look at how (modeled) annual maximum temperatures have (or have not) increased in Ithaca from 1850--2014. Model output from NOAA's GFDL-ESM4 climate model (one of the models used in the latest Climate Model Intercomparison Project, [CMIP6](https://colab.research.google.com/corgiredirector?site=https%3A%2F%2Fcds.climate.copernicus.eu%2Fcdsapp%23%21%2Fdataset%2Fprojections-cmip6%3Ftab%3Doverview)) is available in `data/gfdl-esm4-tempmax-ithaca.csv`. While this model output has not been bias-corrected, we won't worry about that for the purposes of this assignment. The temperature data is in degrees Celsius, and the dates are provided as calendar dates.
+Revisit [Problem 1 from Homework 1](https://envdata.viveks.me/spring2026/hw/hw01/hw01.html#problem-1-7-points).
+
+> The underlying question we would like to address is: what is the influence of drinking beer on the likelihood of being bitten by mosquitoes? There is a mechanistic reason why this might occur: mosquitoes are attracted by changes in body temperature and released CO~2~, and it might be that drinking beer induces these changes. We’ll analyze this question using (synthetic) data which separates an experimental population into two groups, one which drank beer and the other which drank only water.
+
+Now we would like to **test** the null hypothesis that drinking beer makes no difference in attracting mosquitoes. Repeat the analysis from HW1. What is the $p$-value of the observed data under this null hypothesis? If you are interested in testing statistical significance of the proposed alternative hypothesis that beer attracts mosquitoes at the 95% confidence level, what could you conclude that this effect? In other words:
+
+* is the alternative hypothesis statistically significant at this confidence level?
+* is the observation more consistent with the alternative hypothesis than the null hypothesis?
+* what does your finding imply about any conclusions you might draw about this proposed effect?
+
+### Problem 2 (5 points)
+
+Revisit [Problem 5 from Homework 1](https://envdata.viveks.me/spring2026/hw/hw01/hw01.html#problem-5-5-points). 
+
+> You are trying to detect how prevalent cheating was on an exam. You are skeptical of the efficacy of just asking the students if they cheated. You are also concerned about privacy — your goal is not to punish individual students, but to see if there are systemic problems that need to be addressed. Someone proposes the following interview procedure, which the class agrees to participate in:
+
+> Each student flips a fair coin, with the results hidden from the interviewer. The student answers honestly if the coin comes up heads. Otherwise, if the coin comes up tails, the student flips the coin again, and answers “I did cheat” if heads, and “I did not cheat”, if tails.
+
+> You have a hypothesis that cheating was not prevalent, and the proportion of cheaters was no more than 5% of the class; in other words, we expect 5 “true” cheaters out of a class of 100 students. Our TA is more jaded and thinks that cheating was more rampant, and that 30% of the class cheated. The proposed interview procedure is noisy: the interviewer does not know if an admission means that the student cheated, or the result of a heads. However, it gives us a data-generating process that we can model and analyze for consistency with our hypothesis and that of the TA.
+
+Repeat this analysis and suppose that your procedure turned up 40 "yes" answers. What is the $p$-value of having seen this data under both hypotheses? If you wanted to draw a conclusion at a 95% confidence level, what could you conclude about the level of cheating in the class?
+
+### Problem 3 (7 points)
+
+[The Showcase](https://en.wikipedia.org/wiki/The_Price_Is_Right#Showcase) is the final round of every episode of [The Price is Right](https://en.wikipedia.org/wiki/The_Price_Is_Right), matching the two big winners from the episode. Each contestant is shown a “showcase” of prizes, which are usually some combination of a trip, a motor vehicle, some furniture, and maybe some other stuff. They then each have to make a bid on the retail price of the showcase. The rules are:
+
+* an overbid is an automatic loss;
+* the contest who gets closest to the retail price wins their showcase;
+* if a contestant gets within \$250 of the retail price and is closer than their opponent, they win both showcases.
+
+You have been selected to appear on the show. As preparation, you have documented historical prizes and their values. Once you're shown the showcase, you realize that the distribution of values for this spread of prizes has historically followed a truncated normal distribution with mean \$31,000 and standard deviation \$4,500, truncated between \$15,000 and \$42,000.
+
+You can make the following assumptions about the probability of winning and payouts:
+
+* If you bet the exact amount, you win with probability 1 and win both showcases; the value is the double of the single showcase value.
+* If you did not win both showcases but bid under the showcase value, the probability of being outbid increases linearly as the distance between your bid and the value increases (in other words, if you bid the exact value, you win with probability 1, and if you bid $0, you win with probability 0).
+* If you overbid, you automatically lose, with value \$0.
+
+
+#### Problem 3.1 
+
+Using Monte Carlo simulation, find the wager that maximizes your probability of winning. You will need to write a function which computes the winning probability for a given bet, then optimize that function. Make sure to justify the sample size that you use in your Monte Carlo analysis.
+
+#### Problem 3.2 
+
+Using Monte Carlo simulation, find the wager that maximizes your expected winnings. Is this the same as in Problem 3.1? Why do you think it is or is not? Make sure to justify the sample size that you use in your Monte Carlo analysis.
+
+
+### Problem 4
+
+You have been asked by a client to assess the risks of flooding to their home (which is valued at \$400,000 and only floods when the stream water levels exceed 1.5m). They would like to know whether it would be cost-effective to elevate their home to reduce flood risks. After some hydrologic analysis, you have developed a 40-year record of annual maximum water levels (in m) at the nearby stream. 
+
+You also have a depth-damage function for the fraction of the home's value which is damaged at varying flood depths: 
+
+$$d(h) = \mathbb{I}[h > 0] \frac{1}{1+\exp(-k(x-x_0))},$$ 
+
+where $k=1.25$ and $x_0=2$^[As a reminder, the indicator function $\mathbb{I}[h > 0]$ is $0$ when the condition is not satisfied (in this case, when $h=0$) and $1$ when it is satisfied.].  The graph of this function is given in the figure below.
 
 ```{julia}
-#| label: ithaca-temp
+#| fig-cap: Depth-damage function in Problems 2 and 3.
+#| output: true
+#| echo: false
 
-ithaca_dat = CSV.read("data/gfdl-esm4-tempmax-ithaca.csv", DataFrame)
-plot(ithaca_dat.Day, ithaca_dat.TempMax, lw=2, xlabel="Date", ylabel="Daily Maximum Temperature (°C)", legend=false)
+h = 0:0.01:5
+dd(h, k, x₀) = (h .> 0) * 1 ./ (1 .+ exp.(-k * (h .- x₀)))
+plot(h, dd(h, 1.25, 2), xlabel="Flood Depth (m Above Base Elevation)", ylabel="Fraction of Value Damaged", legend=false)
+ylims!(0, 1)
 ```
 
-**In this problem**: 
+In this problem, you will need to calculate the **net present value (NPV)** of flooding damages, which converts damages over time to a present value using a discount rate^[Discount rates reduce future monetary values to reflect the time-value of money; that is, you would rather have a bit less money today than none today and more next year, as you could save or invest that money. The actual choice of discount rates is the subject of much economic theory and plays an important role in environmental decision-making, particularly for multi-generational investments such as climate mitigation. For example, with a relatively large discount rate (such as 7%), all costs and benefits after a decade are effectively zero, which means it never appears cost-effective to e.g. reduce fossil fuel emissions.] For example, if your discount rate is 4%, a dollar next year is worth the equivalent of about 96 cents today. More generally, with a discount rate of $\gamma$ (as a decimal), a dollar of benefits in $t$ years is worth $\$(1-\gamma)^t$ today.
 
-* Load the (daily maximum) temperature data from `data/gfdl-esm4-tempmax-ithaca.csv`. Find the modeled annual maximum temperatures and plot them.
-* Fit a stationary GEV model to the annual maximum series and report your parameter estimates. Plot the fitted distribution along with the data. What type of GEV distribution did you end up with? What is the 100-year return level?
-* Now fit a nonstationary GEV with respect to time (only the location parameter should be non-stationary), $y \sim \text{GEV}(\mu_0 + \mu_1 t, \sigma, \xi)$ (for scaling purposes, begin with $t=0$ corresponding to 1850).
-* What are the AIC values for each model? What can you conclude about the relative evidence for non-stationarity?
+The NPV of a sequence of money $x_t$ with discount rate $\gamma$ is the sum of all of the discounted values, that is, 
+
+$$NPV = \sum_{t=0}^T x_t (1-\gamma)^t,$$ 
+
+where $T$ is the time horizon. We'll use a discount rate of 4% in this problem, which is typical for this type of problem, and a design horizon of 30 years.
+
+For this problem, we will assume that the cost of elevating the house $\Delta h$ m is $C(\Delta h) = \mathbb{I}[h > 0](100,000 + 2,000\Delta h)$. 
+
+#### Problem 4.1
+
+Fit a GEV distribution to the data in `water_depths.csv`. Plot a histogram of the data and the fitted distribution. How well does this distribution fit the data?
+
+#### Problem 4.2
+
+Use Monte Carlo simulation to estimate the NPV of the benefits of elevation levels between 0 and 5m (you don't have to consider increments finer than 0.5m). What elevation heights pass a cost-benefit test (*e.g.* the net benefits of elevation (benefits of avoiding flooding minus cost of elevation) are greater than 0)? You can assume that the costs of elevation are all up front (that is, in year 0). What height (including a possible elevation of 0m) maximizes the NPV of net benefits? 
 
 
-### Problem 2
-
-Now let's analyze how often of the Ithaca temperature data.
-
-**In this problem**: 
-
-* Suppose that we were interested in looking at temperature exceedances over 28°C. Decluster these occurrences and plot the number of exceedances by year. Have they increased over time? 
-* Fit a stationary Poisson-GPD model for the exceedances. What does the GPD distribution look like? 
-* From your model, estimate the 100-year return level. How does it differ from the 100-year return period from the stationary model in Problem 1? Why do you think it agrees or disagrees?
-
-
-### Problem 3
-
-**This problem is only required for students in BEE 5850**.
-
-Let's examine the influence of air pollution and temperature on mortality in Chicago, IL.  The `data/chicago.csv` dataset (originally from the [`gamair` `R` package](https://cran.r-project.org/web/packages/gamair/index.html))contains data on the relationship between environmental conditions (temperature and air quality) and deaths in Chicago from 1987--2000. The variables are:
-
-* the total number of (non-accidental)
-deaths each day (`death`); 
-* the median density over the city of large pollutant particles (PM10; `pm10median`); 
-* the median density of smaller pollutant particles (PM2.5; `pm25median`); 
-* the median concentration of ozone (O$_3$) in the air (`o3median`); the median concentration of sulfur dioxide (SO$_2$) in the air (`so2median`); 
-* the time in days (`time`); and the daily mean temperature (`tmpd`). 
-
-The pollution variables have been standardized to represent deviations from the overall median and the temperature is in Fahrenheit. The days are given as a number of days relative to December 31, 1993. Note that some values are missing; these can be treated as missing at random and dropped in your regressions.
-
-```{julia}
-#| label: chicago-deaths
-
-chicago_dat = CSV.read("data/chicago.csv", DataFrame; delim=',', header=true, missingstring="NA") # <1>
-day_zero = Date("1993-12-31")
-chicago_dat.Date = day_zero .+ Day.(chicago_dat.time .+ 0.5) # <2>
-
-plot(chicago_dat.Date, chicago_dat.death, lw=2, xlabel="Date", ylabel="Non-Accidental Deaths)", legend=false)
-```
-1. The datafile imports columns with `NA` values by default as `String` types, but we want them to be numerical, so we need to explicitly ask `CSV.read` to read in columns as `Float`.
-2. To get the correct calendar date, we need to add 0.5 to the `time` column to make the offset into integers.
-
-**In this problem**:
-
-* Load and plot the deaths data. Linearly regress the number of deaths against time and report the coefficients for the fitted model. Add the regression line to your plot. What does this regression tell you?
-* Now linearly regress the deaths data against temperature. Once again, report the coefficients, and add the regression line to your plot. What does this regression tell you about the influence of temperature?
-* Expand your previous model by regressing deaths against temperature and PM2.5 density. Report the coefficients and add this regression line to your plot. 
-* Compute the AICs for the three fitted model and compare them. What do they tell you about the relative evidence for the influence of temperature and PM2.5 density on deaths? How do your conclusions based on AIC compare to those you might draw from your regression coefficients and plots?
