@@ -41,7 +41,7 @@ freeze: false
 ::: {.callout-important icon=false}
 ### Due Date
 
-Friday, 5/2/25, 9:00pm
+Friday, 4/17/26, 9:00pm
 :::
 
 ::: {.content-visible unless-format="ipynb"}
@@ -60,8 +60,10 @@ To do this assignment in Julia, you can find a Jupyter notebook with an appropri
 The goal of this homework assignment is to practicing approaches to extreme value analysis and using information criteria to assess evidence for models.
 
 * Problem 1 asks you to conduct a null hypothesis test using model simulations.
-* Problem 2 asks you to use peaks-over-thresholds modeling on the same dataset from Problem 1.
-* Problem 3 (only required for students in BEE 5850) asks you to compare several linear regression models for environmental influences on non-accidental death data.
+* Problem 1 asks you to use $p$-values to compare two data-generating hypotheses.
+* Problem 3 asks you to use Monte Carlo optimization to identify bidding strategies for The Showcase from The Price is Right.
+* Problem 4 asks you to use Monte Carlo optimization to identify house elevation strategies to mitigate flooding damages.
+
 
 ### Load Environment
 
